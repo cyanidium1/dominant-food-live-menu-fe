@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
-import Fire from './Fire';
-import Header from './Header';
-import Orders from './Orders';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import Admin from "./Admin";
+import Home from "./Home";
+import { FetchAcceptedOrders, FetchCompletedOrders } from "./orders-api";
 
 function App() {
-  const [orders, setOrders] = useState({ accepted: ["123", "234", "456"], ready: ["120", "456", "777"] });
+  const [orders, setOrders] = useState({
+    accepted: [],
+    ready: [],
+  });
+
+  const pathname = window.location.pathname;
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const acceptedResponse = await fetch('http://localhost:3001/orders/accepted-orders');
-        const acceptedData = await acceptedResponse.json();
+        const acceptedData = await FetchAcceptedOrders();
 
-        const completedResponse = await fetch('http://localhost:3001/orders/completed-orders');
-        const completedData = await completedResponse.json();
+        const completedData = await FetchCompletedOrders();
 
-        setOrders({ accepted: acceptedData, ready: completedData });
+        setOrders({ accepted: acceptedData || [], ready: completedData || [] });
 
-        console.log({ accepted: acceptedData, ready: completedData })
+        console.log({ accepted: acceptedData, ready: completedData });
       } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.error("Error fetching orders:", error);
       }
     };
 
@@ -32,10 +35,11 @@ function App() {
   }, []);
 
   return (
-    <div className='bg-black h-screen overflow-hidden'>
-      <Header />
-      <Orders orders={orders} />
-      <Fire />
+    <div className="bg-black h-screen overflow-hidden">
+      {pathname === "/" && <Home orders={orders} />}
+      {pathname === "/slashadmin" && (
+        <Admin orders={orders} setOrders={setOrders} />
+      )}
     </div>
   );
 }
