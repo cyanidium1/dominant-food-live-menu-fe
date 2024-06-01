@@ -6,65 +6,47 @@ import {
   List,
   ListItem,
   ListItemText,
-  Modal,
-  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import {
-  MoveAcceptedOrderToCompleted,
-  RequestRemoveCompletedOrder,
-  RequestRemoveAcceptedOrder,
-} from "./orders-api";
-
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  boxShadow: 24,
-  p: 4,
-};
+import axios from "axios";
 
 function Admin({ orders, setOrders }) {
-  const { accepted, ready } = orders;
   const [open, setOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
-  const [deleteType, setDeleteType] = useState("");
 
-  const handleOpen = (order, type) => {
-    setOrderToDelete(order);
-    setDeleteType(type);
+  const handleClickOpen = (order, type) => {
+    setOrderToDelete({ order, type });
     setOpen(true);
   };
 
   const handleClose = () => {
-    setOpen(false);
     setOrderToDelete(null);
-    setDeleteType("");
+    setOpen(false);
   };
 
-  const confirmDelete = async () => {
-    if (!orderToDelete) return;
-
+  const handleDelete = async () => {
     try {
-      if (deleteType === "accepted") {
-        await RequestRemoveAcceptedOrder(orderToDelete.orderNumber);
-        setOrders((prevOrders) => ({
-          accepted: prevOrders.accepted.filter(
-            (item) => item.orderNumber !== orderToDelete.orderNumber
-          ),
-          ready: prevOrders.ready,
-        }));
-      } else if (deleteType === "ready") {
-        await RequestRemoveCompletedOrder(orderToDelete.orderNumber);
-        setOrders((prevOrders) => ({
-          ready: prevOrders.ready.filter(
-            (item) => item.orderNumber !== orderToDelete.orderNumber
-          ),
-          accepted: prevOrders.accepted,
-        }));
+      if (orderToDelete.type === "accepted") {
+        await axios.delete(
+          `http://localhost:3001/accepted-orders/${orderToDelete.order.orderNumber}`
+        );
+      } else if (orderToDelete.type === "ready") {
+        await axios.delete(
+          `http://localhost:3001/completed-orders/${orderToDelete.order.orderNumber}`
+        );
       }
+
+      setOrders((prevOrders) => ({
+        ...prevOrders,
+        [orderToDelete.type]: prevOrders[orderToDelete.type].filter(
+          (order) => order !== orderToDelete.order
+        ),
+      }));
+
       handleClose();
     } catch (error) {
       console.error("Error deleting order:", error);
@@ -73,11 +55,11 @@ function Admin({ orders, setOrders }) {
 
   const moveToReady = async (order) => {
     try {
-      await MoveAcceptedOrderToCompleted(order.orderNumber);
+      await axios.post(
+        `http://localhost:3001/complete-order/${order.orderNumber}`
+      );
       setOrders((prevOrders) => ({
-        accepted: prevOrders.accepted.filter(
-          (item) => item.orderNumber !== order.orderNumber
-        ),
+        accepted: prevOrders.accepted.filter((item) => item !== order),
         ready: [...prevOrders.ready, order],
       }));
     } catch (error) {
@@ -85,13 +67,18 @@ function Admin({ orders, setOrders }) {
     }
   };
 
-  const moveToAccepted = (order) => {
-    setOrders((prevOrders) => ({
-      ready: prevOrders.ready.filter(
-        (item) => item.orderNumber !== order.orderNumber
-      ),
-      accepted: [...prevOrders.accepted, order],
-    }));
+  const moveToAccepted = async (order) => {
+    try {
+      await axios.post(
+        `http://localhost:3001/accept-order/${order.orderNumber}`
+      );
+      setOrders((prevOrders) => ({
+        ready: prevOrders.ready.filter((item) => item !== order),
+        accepted: [...prevOrders.accepted, order],
+      }));
+    } catch (error) {
+      console.error("Error moving order to accepted:", error);
+    }
   };
 
   return (
@@ -102,9 +89,9 @@ function Admin({ orders, setOrders }) {
       <div className="flex flex-col">
         <div className="mb-4">
           <Typography variant="h6">Accepted Orders</Typography>
-          {accepted && (
+          {orders.accepted && (
             <List>
-              {accepted.map((order) => (
+              {orders.accepted.map((order) => (
                 <ListItem
                   key={order.orderNumber}
                   className="flex justify-between items-center text-white"
@@ -123,7 +110,7 @@ function Admin({ orders, setOrders }) {
                       variant="contained"
                       color="error"
                       size="small"
-                      onClick={() => handleOpen(order, "accepted")}
+                      onClick={() => handleClickOpen(order, "accepted")}
                     >
                       Delete
                     </Button>
@@ -135,9 +122,9 @@ function Admin({ orders, setOrders }) {
         </div>
         <div>
           <Typography variant="h6">Ready Orders</Typography>
-          {ready && (
+          {orders.ready && (
             <List>
-              {ready.map((order) => (
+              {orders.ready.map((order) => (
                 <ListItem
                   key={order.orderNumber}
                   className="flex justify-between items-center text-white"
@@ -156,7 +143,7 @@ function Admin({ orders, setOrders }) {
                       variant="contained"
                       color="error"
                       size="small"
-                      onClick={() => handleOpen(order, "ready")}
+                      onClick={() => handleClickOpen(order, "ready")}
                     >
                       Delete
                     </Button>
@@ -167,24 +154,23 @@ function Admin({ orders, setOrders }) {
           )}
         </div>
       </div>
-      <Modal open={open} onClose={handleClose}>
-        <Box sx={modalStyle}>
-          <Typography variant="h6" component="h2">
-            Confirm Deletion
-          </Typography>
-          <Typography sx={{ mt: 2 }}>
-            Are you sure you want to delete the order?
-          </Typography>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button variant="contained" color="error" onClick={confirmDelete}>
-              Yes
-            </Button>
-            <Button variant="contained" onClick={handleClose}>
-              No
-            </Button>
-          </div>
-        </Box>
-      </Modal>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>{"Confirm Deletion"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the order{" "}
+            {orderToDelete?.order.orderNumber}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            No
+          </Button>
+          <Button onClick={handleDelete} color="primary" autoFocus>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

@@ -10,6 +10,13 @@ export const FetchCompletedOrders = async () => {
   return data.data;
 };
 
+export const MoveCompletedOrderToAccepted = async (orderNumber) => {
+  const data = await axios.post(
+    `http://localhost:3001/accept-order/${orderNumber}`
+  );
+  return data.data;
+};
+
 export const MoveAcceptedOrderToCompleted = async (orderNumber) => {
   const data = await axios.post(
     `http://localhost:3001/complete-order/${orderNumber}`
