@@ -2,6 +2,7 @@
   "name": "dominant-menu-front",
   "version": "0.1.0",
   "private": false,
+  "homepage": "./",
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
