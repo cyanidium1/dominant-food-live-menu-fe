@@ -2,7 +2,7 @@
   "name": "dominant-menu-front",
   "version": "0.1.0",
   "private": false,
-  "homepage": "https://cyanidium1.github.io/dominant-food-live-menu-fe/",
+  "homepage": "https://cyanidium1.github.io/dominant-food-live-menu-fe",
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
