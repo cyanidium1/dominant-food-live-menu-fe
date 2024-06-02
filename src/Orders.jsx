@@ -15,9 +15,9 @@ function Orders({ orders }) {
           </p>
 
           <div className="grid grid-cols-2 gap-3 p-2">
-            {accepted.map(({ orderNumber }) => (
-              <li className="list-none" key={orderNumber}>
-                <p className="my-2">{orderNumber}</p>
+            {accepted.map((order) => (
+              <li className="list-none" key={order}>
+                <p className="my-2">{order}</p>
               </li>
             ))}
           </div>
@@ -31,9 +31,9 @@ function Orders({ orders }) {
             Porositë e gatshme | Готовые заказы
           </p>
           <div className="grid grid-cols-2 gap-3 p-2">
-            {ready.map(({ orderNumber }) => (
-              <li className="list-none" key={orderNumber}>
-                <p className="my-2">{orderNumber}</p>
+            {ready.map((order) => (
+              <li className="list-none" key={order}>
+                <p className="my-2">{order}</p>
               </li>
             ))}
           </div>

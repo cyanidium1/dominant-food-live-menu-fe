@@ -17,7 +17,7 @@ import axios from "axios";
 function Admin({ orders, setOrders }) {
   const [open, setOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
-
+  console.log(orders)
   const handleClickOpen = (order, type) => {
     setOrderToDelete({ order, type });
     setOpen(true);
@@ -32,11 +32,11 @@ function Admin({ orders, setOrders }) {
     try {
       if (orderToDelete.type === "accepted") {
         await axios.delete(
-          `http://localhost:3001/accepted-orders/${orderToDelete.order.orderNumber}`
+          `http://localhost:3001/accepted-orders/${orderToDelete.order}`
         );
       } else if (orderToDelete.type === "ready") {
         await axios.delete(
-          `http://localhost:3001/completed-orders/${orderToDelete.order.orderNumber}`
+          `http://localhost:3001/completed-orders/${orderToDelete.order}`
         );
       }
 
@@ -56,7 +56,7 @@ function Admin({ orders, setOrders }) {
   const moveToReady = async (order) => {
     try {
       await axios.post(
-        `http://localhost:3001/complete-order/${order.orderNumber}`
+        `http://localhost:3001/complete-order/${order}`
       );
       setOrders((prevOrders) => ({
         accepted: prevOrders.accepted.filter((item) => item !== order),
@@ -70,7 +70,7 @@ function Admin({ orders, setOrders }) {
   const moveToAccepted = async (order) => {
     try {
       await axios.post(
-        `http://localhost:3001/accept-order/${order.orderNumber}`
+        `http://localhost:3001/accept-order/${order}`
       );
       setOrders((prevOrders) => ({
         ready: prevOrders.ready.filter((item) => item !== order),
@@ -83,53 +83,55 @@ function Admin({ orders, setOrders }) {
 
   return (
     <Container>
-      <Typography variant="h4" className="text-center my-4">
+      <Typography variant="h4" className="text-center my-4 text-white p-4">
         Admin Page
       </Typography>
       <div className="flex flex-col">
         <div className="mb-4">
-          <Typography variant="h6">Accepted Orders</Typography>
+          <Typography color='white' variant="h6">Accepted Orders</Typography>
           {orders.accepted && (
             <List>
-              {orders.accepted.map((order) => (
-                <ListItem
-                  key={order.orderNumber}
-                  className="flex justify-between items-center text-white"
-                >
-                  <ListItemText primary={order.orderNumber} />
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      onClick={() => moveToReady(order)}
-                    >
-                      Move to Ready
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      size="small"
-                      onClick={() => handleClickOpen(order, "accepted")}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </ListItem>
-              ))}
+              {orders.accepted.map((order) =>
+                order ? (
+                  <ListItem
+                    key={order}
+                    className="flex justify-between items-center text-white"
+                  >
+                    <ListItemText primary={order} />
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => moveToReady(order)}
+                      >
+                        Move to Ready
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        onClick={() => handleClickOpen(order, "accepted")}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </ListItem>
+                ) : null
+              )}
             </List>
           )}
         </div>
         <div>
-          <Typography variant="h6">Ready Orders</Typography>
+          <Typography color='white' variant="h6">Ready Orders</Typography>
           {orders.ready && (
             <List>
               {orders.ready.map((order) => (
                 <ListItem
-                  key={order.orderNumber}
+                  key={order}
                   className="flex justify-between items-center text-white"
                 >
-                  <ListItemText primary={order.orderNumber} />
+                  <ListItemText primary={order} />
                   <div className="flex space-x-2">
                     <Button
                       variant="contained"
@@ -159,7 +161,7 @@ function Admin({ orders, setOrders }) {
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete the order{" "}
-            {orderToDelete?.order.orderNumber}?
+            {orderToDelete?.order}?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -171,7 +173,7 @@ function Admin({ orders, setOrders }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Container >
   );
 }
 
